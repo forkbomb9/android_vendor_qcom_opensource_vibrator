@@ -476,6 +476,9 @@ ndk::ScopedAStatus Vibrator::on(int32_t timeoutMs,
                                 const std::shared_ptr<IVibratorCallback>& callback) {
     int ret;
 
+    if (timeoutMs < 100)
+        timeoutMs = 100;
+
     ALOGD("Vibrator on for timeoutMs: %d", timeoutMs);
     if (ledVib.mDetected)
         ret = ledVib.on(timeoutMs);
