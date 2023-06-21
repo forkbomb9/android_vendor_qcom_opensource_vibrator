@@ -350,6 +350,20 @@ LedVibratorDevice::LedVibratorDevice() {
     mDetected = true;
 }
 
+int read_value(const char *file, char *value) {
+    int fd, ret;
+    fd = TEMP_FAILURE_RETRY(open(file, O_RDONLY));
+    if (fd < 0) {
+        ALOGE("open %s failed, errno = %d", file, errno);
+        return fd;
+    }
+
+    ret = read(fd, value, 8);
+    close(fd);
+
+    return ret;
+}
+
 int LedVibratorDevice::write_value(const char *file, const char *value) {
     int fd;
     int ret;
@@ -438,6 +452,14 @@ ndk::ScopedAStatus Vibrator::getCapabilities(int32_t* _aidl_return) {
 
 ndk::ScopedAStatus Vibrator::off() {
     int ret;
+    char duration_file[PATH_MAX];
+    char duration[8];
+
+    snprintf(duration_file, sizeof(duration_file), "%s/%s", LED_DEVICE, "duration");
+    ret = read_value(duration_file, duration);
+
+    if (ret > 0 && atoi(duration) > 0)
+        usleep(atoi(duration) * 1000);
 
     ALOGD("QTI Vibrator off");
     if (ledVib.mDetected)
